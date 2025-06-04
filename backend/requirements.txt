@@ -1,0 +1,8 @@
+autogen_agentchat
+openai
+autogen
+autogen_ext
+pymongo
+Flask
+PyJWT
+Werkzeug
