@@ -2,6 +2,7 @@ import os
 import jwt
 from datetime import datetime, timezone, timedelta
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import users_collection, sessions_collection
 from auth import token_required
@@ -10,6 +11,7 @@ from bson import ObjectId
 import asyncio
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5174"}})
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 
