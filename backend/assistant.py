@@ -1,6 +1,11 @@
 from autogen_agentchat.agents import AssistantAgent
 from model_client import model_client
-from function_tools import store_outfit_tool, retrieve_outfit_tool
+from function_tools import (
+                                store_outfit_tool, 
+                                retrieve_outfit_tool, 
+                                retrieve_recent_outfit_tool, 
+                                store_worn_outfit_tool
+                            )
 from autogen_core.memory import MemoryContent, ListMemory
 from db import sessions_collection
 from bson import ObjectId
@@ -48,11 +53,15 @@ def create_agent(session_id: str) -> AssistantAgent:
     
     personalized_message = f"You are assisting a user with username: '{session["user_id"]}'.\n\n{SYSTEM_MESSAGE}"
     addMemory()
+    func_tools = [store_outfit_tool, retrieve_outfit_tool, 
+    retrieve_recent_outfit_tool, 
+                store_worn_outfit_tool]
+    
     # Create new agent with session-specific memory
     agent = AssistantAgent(
         name=f"assistant_{session_id}",
         model_client=model_client,
-        tools=[store_outfit_tool, retrieve_outfit_tool],
+        tools=func_tools,
         reflect_on_tool_use=True,
         system_message=personalized_message,
         memory=[memory],

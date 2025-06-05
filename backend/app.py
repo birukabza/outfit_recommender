@@ -18,13 +18,24 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
-    if not data or not data.get("username") or not data.get("password"):
-        return jsonify({"message": "Missing username or password"}), 400
-    if users_collection.find_one({"username": data["username"]}):
-        return jsonify({"message": "Username already exists"}), 400
-    hashed_password = generate_password_hash(data["password"])
+
+    required = ("username", "password", "email")
+    if not all(data.get(k) for k in required):
+        return jsonify({"message": "username, password & email required"}), 400
+
+    if users_collection.find_one(
+        {"$or": [{"username": data["username"]}, {"email": data["email"]}]}
+    ):
+        return jsonify({"message": "Username or e-mail already exists"}), 400
+
+    hashed = generate_password_hash(data["password"])
     users_collection.insert_one(
-        {"username": data["username"], "password": hashed_password}
+        {
+            "username": data["username"],
+            "email": data["email"],
+            "password": hashed,
+            "created": datetime.now(timezone.utc),
+        }
     )
     return jsonify({"message": "User registered successfully"}), 201
 
@@ -95,7 +106,7 @@ def chat(current_user):
             }
         },
     )
-
+    print(result.messages)
     return jsonify({"response": result.messages[-1].content, "session_id": session_id})
 
 
