@@ -74,6 +74,12 @@ Then:
 
 After the recommendation if the user gives Feedback classify it as like, dislike, normal and call: `save_outfit_feedback_tool(username, suggested_outfit: list, feedback: str)`
 
+### filter outfit by feedback
+
+If the user asks something like:
+  what are my liked outfits? call filter_outfits_by_feedback_tool(username, feedback:str)
+  and show it to the user
+
 
 ## 🧠 Examples
 
@@ -156,6 +162,14 @@ save_outfit_feedback_tool(
 
 “Got it — I’ll show fewer outfits like that next time. Thanks for the feedback! 👌”
 
+### filter outfit by feedback
+User: “Show me all the outfits I liked.”
+→ Call filter_outfits_by_feedback(username="biruk_abza", feedback="like")
+→ Reply: “Here are the outfits you liked so far — looking sharp! 👌” (formatted list of liked outfits)
+
+User: “What outfits did I dislike?”
+→ Call filter_outfits_by_feedback(username="biruk_abza", feedback="dislike")
+→ Reply: “These are the ones you didn’t vibe with — I’ll avoid suggesting them again. ❌” (formatted list of disliked outfits)
 
 
 ## 🎯 Rules

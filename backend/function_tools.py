@@ -200,7 +200,7 @@ def save_outfit_feedback(username: str, suggested_outfit: list, feedback: str) -
     """
     Save user feedback (like/dislike) on a suggested outfit.
     """
-    if feedback not in ["like", "dislike"]:
+    if feedback not in ["like", "dislike", "normal"]:
         return "Invalid feedback value."
 
     try:
@@ -216,6 +216,54 @@ def save_outfit_feedback(username: str, suggested_outfit: list, feedback: str) -
 
     except PyMongoError as e:
         return "⚠️ Error saving feedback: " + str(e)
+
+def filter_outfits_by_feedback(username: str, feedback: str) -> str:
+    """
+    Retrieve outfits suggested to the user filtered by feedback type ("like" or "dislike" or "normal").
+
+    Parameters:
+    - username: unique identifier of the user
+    - feedback: "like" , "dislike" or "normal"
+
+    Returns:
+    - A formatted string listing outfits with the specified feedback
+    """
+    if feedback not in ["like", "dislike"]:
+        return "⚠️ Feedback must be 'like' or 'dislike'."
+
+    try:
+        records = list(
+            feedback_collection.find({
+                "username": username,
+                "feedback": feedback
+            }).sort("timestamp", -1)
+        )
+
+        if not records:
+            return f"🧾 No outfits found with feedback '{feedback}' for user '{username}'."
+
+        response = f"👗 Outfits you marked as '{feedback}', {username}:\n\n"
+
+        for idx, record in enumerate(records, start=1):
+            outfit = record.get("suggested_outfit", [])
+            response += f"🧥 Outfit {idx}:\n"
+            for piece in outfit:
+                desc = f" - {piece.get('color', 'unknown')} {piece.get('type', 'item')}"
+                if "style" in piece:
+                    desc += f" ({piece['style']})"
+                response += desc + "\n"
+            time = record.get("timestamp")
+            if isinstance(time, datetime):
+                if time.tzinfo is None:
+                    time = time.replace(tzinfo=timezone.utc)
+                response += f"   ⏱️ Feedback given on {time.strftime('%Y-%m-%d %H:%M')}\n"
+            response += "\n"
+
+        return response.strip()
+
+    except Exception as e:
+        return "⚠️ Unable to retrieve outfits by feedback right now. Please try again later."
+
 
 retrieve_outfit_tool = FunctionTool(
     name="retrieve_user_outfit",
@@ -252,4 +300,10 @@ save_outfit_feedback_tool = FunctionTool(
     name="save_outfit_feedback",
     func=save_outfit_feedback,
     description="After suggesting outfit this tool saves the feedback from the user"
+)
+
+filter_outfits_by_feedback_tool = FunctionTool(
+    name="filter_outfits_by_feedback",
+    func=filter_outfits_by_feedback,
+    description="Retrieve outfits suggested to the user filtered by feedback type"
 )

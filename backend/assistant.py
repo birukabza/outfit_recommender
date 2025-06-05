@@ -6,7 +6,8 @@ from function_tools import (
                                 retrieve_recent_outfit_tool, 
                                 store_worn_outfit_tool,
                                 get_weather_tool,
-                                save_outfit_feedback_tool
+                                save_outfit_feedback_tool,
+                                filter_outfits_by_feedback_tool
                             )
 from autogen_core.memory import MemoryContent, ListMemory
 from db import sessions_collection
@@ -76,7 +77,8 @@ def create_agent(session_id: str,
         retrieve_recent_outfit_tool,
         store_worn_outfit_tool,
         get_weather_tool,
-        save_outfit_feedback_tool
+        save_outfit_feedback_tool,
+        filter_outfits_by_feedback_tool,
     ]
 
     agent = AssistantAgent(
