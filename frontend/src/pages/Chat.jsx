@@ -10,6 +10,7 @@ import {
 } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import axios from 'axios'
+import Sidebar from '../components/Sidebar'
 
 function Chat() {
   const [messages, setMessages] = useState([])
@@ -47,6 +48,33 @@ function Chat() {
     scrollToBottom()
   }, [messages])
 
+  const loadSession = async (id) => {
+    if (!id) {
+      setMessages([])
+      setSessionId(null)
+      return
+    }
+
+    try {
+      const response = await axios.get(`http://localhost:5000/sessions/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      
+      const sessionMessages = response.data.messages.map(msg => ({
+        text: msg.content,
+        sender: msg.role === 'user' ? 'user' : 'bot',
+        timestamp: msg.timestamp
+      }))
+      
+      setMessages(sessionMessages)
+      setSessionId(id)
+    } catch (error) {
+      console.error('Error loading session:', error)
+    }
+  }
+
   const handleSend = async (e) => {
     e.preventDefault()
     if (!newMessage.trim()) return
@@ -72,7 +100,6 @@ function Chat() {
         }
       })
 
-      // Update session ID if it's a new session
       if (response.data.session_id) {
         setSessionId(response.data.session_id)
       }
@@ -102,9 +129,10 @@ function Chat() {
       sx={{
         height: 'calc(100vh - 200px)',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'row'
       }}
     >
+      <Sidebar onSessionSelect={loadSession} currentSessionId={sessionId} />
       <Paper
         elevation={3}
         sx={{
@@ -220,4 +248,4 @@ function Chat() {
   )
 }
 
-export default Chat 
+export default Chat

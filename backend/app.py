@@ -155,5 +155,19 @@ def get_session(current_user, session_id):
     return jsonify(session), 200
 
 
+@app.route("/sessions/<session_id>", methods=["DELETE"])
+@token_required
+def delete_session(current_user, session_id):
+    result = sessions_collection.delete_one({
+        "_id": ObjectId(session_id),
+        "user_id": current_user["username"]
+    })
+    
+    if result.deleted_count == 0:
+        return jsonify({"message": "Session not found"}), 404
+    
+    return jsonify({"message": "Session deleted successfully"}), 204
+
+
 if __name__ == "__main__":
     app.run(debug=True)

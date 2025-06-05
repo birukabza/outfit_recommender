@@ -5,7 +5,7 @@ import axios from 'axios'
 import Navbar from './components/Navbar'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import Chat from './pages/Chat'
+import ChatPage from './pages/Chat'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -52,7 +52,7 @@ function App() {
             path="/chat" 
             element={
               isAuthenticated ? 
-                <Chat /> : 
+                <ChatPage /> : 
                 <Navigate to="/login" replace />
             } 
           />
