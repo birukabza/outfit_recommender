@@ -10,6 +10,7 @@ from assistant import create_agent
 from bson import ObjectId
 import asyncio
 from dotenv import load_dotenv
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -115,7 +116,43 @@ def chat(current_user):
 @app.route("/validate-token", methods=["GET"])
 @token_required
 def validate_token(current_user):
-    return jsonify({"message": "Token is valid", "username": current_user["username"]}), 200
+    return (
+        jsonify({"message": "Token is valid", "username": current_user["username"]}),
+        200,
+    )
+
+
+@app.route("/sessions", methods=["GET"])
+@token_required
+def get_sessions(current_user):
+    sessions = list(
+        sessions_collection.find(
+            {"user_id": current_user["username"]}, {"messages": 0}  # Exclude messages
+        ).sort("created_at", -1)
+    )
+
+    for session in sessions:
+        session["_id"] = str(session["_id"])
+        session["created_at"] = session["created_at"].isoformat()
+
+    return jsonify(sessions), 200
+
+
+@app.route("/sessions/<session_id>", methods=["GET"])
+@token_required
+def get_session(current_user, session_id):
+    session = sessions_collection.find_one(
+        {"_id": ObjectId(session_id), "user_id": current_user["username"]}
+    )
+
+    if not session:
+        return jsonify({"message": "Session not found"}), 404
+
+    session["_id"] = str(session["_id"])
+    session["created_at"] = session["created_at"].isoformat()
+    for message in session["messages"]:
+        message["timestamp"] = message["timestamp"].isoformat()
+    return jsonify(session), 200
 
 
 if __name__ == "__main__":

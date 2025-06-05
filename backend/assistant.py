@@ -13,6 +13,7 @@ from autogen_core.memory import MemoryContent, ListMemory
 from db import sessions_collection
 from bson import ObjectId
 from typing import Optional, Dict, Any
+import asyncio
 
 def load_system_message(path: str) -> str:
     with open(path, "r", encoding="utf-8") as message:
@@ -66,10 +67,16 @@ def create_agent(session_id: str,
 
     personalized_message = (
         f"You are assisting a user with username: '{session['user_id']}'"
-        f"{coords_txt}.\n\n{SYSTEM_MESSAGE}"
+        f"{coords_txt}.\n\n"
+        f"{SYSTEM_MESSAGE}\n\n"
+        "IMPORTANT: Always check the conversation history in your memory before responding. "
+        "Your responses should be contextual and reference previous messages when relevant. "
+        "If a user asks about something that was discussed before, use that context in your response. "
+        "When responding, first check your memory for relevant previous messages and incorporate that context into your response."
     )
 
-    add_memory()
+    # Run the async function to add memory
+    asyncio.run(add_memory())
 
     func_tools = [
         store_outfit_tool,
@@ -87,7 +94,7 @@ def create_agent(session_id: str,
         tools=func_tools,
         reflect_on_tool_use=True,
         system_message=personalized_message,
-        memory=[memory],
+        memory=[memory]
     )
 
     active_agents[session_id] = agent
