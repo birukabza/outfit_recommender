@@ -112,5 +112,11 @@ def chat(current_user):
     return jsonify({"response": result.messages[-1].content, "session_id": session_id})
 
 
+@app.route("/validate-token", methods=["GET"])
+@token_required
+def validate_token(current_user):
+    return jsonify({"message": "Token is valid", "username": current_user["username"]}), 200
+
+
 if __name__ == "__main__":
     app.run(debug=True)

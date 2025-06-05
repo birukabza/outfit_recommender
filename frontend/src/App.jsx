@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Box, Container } from '@mui/material'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 import Navbar from './components/Navbar'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -8,6 +9,37 @@ import Chat from './pages/Chat'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const validateToken = async () => {
+      const token = localStorage.getItem('token')
+      if (token) {
+        try {
+          await axios.get('http://localhost:5000/validate-token', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          })
+          setIsAuthenticated(true)
+        } catch (error) {
+          localStorage.removeItem('token')
+          setIsAuthenticated(false)
+        }
+      }
+      setIsLoading(false)
+    }
+
+    validateToken()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        Loading...
+      </Box>
+    )
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

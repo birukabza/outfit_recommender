@@ -2,3 +2,5 @@
 *__pycache__
 *node_modules
 backend/populate_db.py
+backend/try.py
+
