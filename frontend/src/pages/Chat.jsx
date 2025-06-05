@@ -16,7 +16,28 @@ function Chat() {
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [sessionId, setSessionId] = useState(null)
+  const [location, setLocation] = useState(null)
   const messagesEndRef = useRef(null)
+
+  const getLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          })
+        },
+        (error) => {
+          console.error('Error getting location:', error)
+        }
+      )
+    }
+  }
+
+  useEffect(() => {
+    getLocation()
+  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -43,7 +64,8 @@ function Chat() {
     try {
       const response = await axios.post('http://localhost:5000/chat', {
         message: newMessage,
-        session_id: sessionId
+        session_id: sessionId,
+        location: location
       }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
