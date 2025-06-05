@@ -3,7 +3,8 @@ from flask import request, jsonify
 import jwt
 from db import users_collection
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 
 def token_required(f):
     @wraps(f)

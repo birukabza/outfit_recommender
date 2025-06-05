@@ -7,3 +7,4 @@ Flask
 PyJWT
 Werkzeug
 flask-cors
+dotenv

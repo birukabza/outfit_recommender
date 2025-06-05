@@ -1,8 +1,12 @@
 from autogen_core.tools import FunctionTool
 from datetime import datetime, timezone, timedelta
 from pymongo.errors import PyMongoError
-from db import outfit_collection
-from db import recent_outfits_collection
+from db import outfit_collection, recent_outfits_collection, feedback_collection
+import os
+import requests
+
+from dotenv import load_dotenv
+load_dotenv()
 
 
 def store_user_outfit(username: str, outfit: list) -> str:
@@ -38,7 +42,7 @@ def store_user_outfit(username: str, outfit: list) -> str:
 def retrieve_user_outfit(username: str) -> str:
     """
     retrieves user's outfit
-    Args:
+    Parameters:
         username (str): user's unique Identifier
     Returns:
         dict: dictionary of user outfits
@@ -161,6 +165,58 @@ def retrieve_recent_outfits(username: str, days: int = 10) -> str:
     except Exception as e:
         return "⚠️ Sorry, couldn't retrieve your recent outfits. Please check again soon!"
 
+def get_weather_by_coords(latitude: float, longitude: float) -> str:
+    """
+    Fetches current weather data from OpenWeatherMap using coordinates.
+    
+    Returns a formatted string like:
+    "Weather: Clear sky, 28.5 °C (feels like 29.2 °C)."
+    """
+    OPENWEATHERMAP_API_KEY = os.getenv("OPENWEATHERMAP_API_KEY")
+    if not OPENWEATHERMAP_API_KEY:
+        raise ValueError("⚠️ OpenWeatherMap API key is not set in the environment.")
+
+    url = (
+        f"https://api.openweathermap.org/data/2.5/weather?"
+        f"lat={latitude}&lon={longitude}&units=metric&appid={OPENWEATHERMAP_API_KEY}"
+    )
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+        description = data["weather"][0]["description"].capitalize()
+        temperature = data["main"]["temp"]
+        feels_like = data["main"]["feels_like"]
+
+        return f"Weather: {description}, {temperature:.1f} °C (feels like {feels_like:.1f} °C)."
+
+    except requests.RequestException as e:
+        print("❌ Failed to fetch weather data:", e)
+        return "❌ Unable to fetch weather data due to a request error."
+
+def save_outfit_feedback(username: str, suggested_outfit: list, feedback: str) -> str:
+    """
+    Save user feedback (like/dislike) on a suggested outfit.
+    """
+    if feedback not in ["like", "dislike"]:
+        return "Invalid feedback value."
+
+    try:
+        doc = {
+            "username": username,
+            "suggested_outfit": suggested_outfit,
+            "feedback": feedback,
+            "timestamp": datetime.now(timezone.utc)
+        }
+
+        feedback_collection.insert_one(doc)
+        return "✅ Feedback saved. We'll improve your future recommendations!"
+
+    except PyMongoError as e:
+        return "⚠️ Error saving feedback: " + str(e)
+
 retrieve_outfit_tool = FunctionTool(
     name="retrieve_user_outfit",
     func=retrieve_user_outfit,
@@ -184,4 +240,16 @@ retrieve_recent_outfit_tool = FunctionTool(
     name="retrieve_recent_outfit",
     func=retrieve_recent_outfits,
     description="Retrieves the recent outfits worn by the user"
+)
+
+get_weather_tool = FunctionTool(
+    name="get_weather_tool",
+    func=get_weather_by_coords,
+    description="returns the weather in degree celsius given the coordinates"
+)
+
+save_outfit_feedback_tool = FunctionTool(
+    name="save_outfit_feedback",
+    func=save_outfit_feedback,
+    description="After suggesting outfit this tool saves the feedback from the user"
 )

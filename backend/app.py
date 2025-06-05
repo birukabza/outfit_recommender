@@ -9,10 +9,12 @@ from auth import token_required
 from assistant import create_agent
 from bson import ObjectId
 import asyncio
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:5174"}})
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+CORS(app, resources={r"/*": {"origins": "*"}})
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
 
 @app.route("/register", methods=["POST"])
@@ -79,7 +81,7 @@ def chat(current_user):
         session_id = str(result.inserted_id)
 
     # Get or create agent for this session
-    agent = create_agent(session_id)
+    agent = create_agent(session_id, data["location"])
 
     # Run the agent asynchronously
     result = asyncio.run(agent.run(task=user_input))
